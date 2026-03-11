@@ -41,8 +41,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               slackUsername: (profile as { name?: string } | undefined)?.name ?? undefined,
             },
           })
-          .catch(() => {
-            // Non-fatal: if update fails, user can still sign in
+          .catch((err) => {
+            // Non-fatal: user record may not exist yet on first sign-in
+            console.warn('Failed to sync Slack fields:', err)
           })
       }
     },
