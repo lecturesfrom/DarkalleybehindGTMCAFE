@@ -40,16 +40,29 @@ COMPLETED:
 - Step 1.8: src/middleware.ts — route protection (public routes, status redirects, admin RBAC)
   - Build confirmed: ✓
 
+- Step 2.1: /login page — dark alley card, neon "Sign in with Slack" button
+- Step 2.2: /pending page — amber badge, awaiting approval message, sign out
+- Step 2.3: lib/slack.ts — checkSlackActivity (users.info, 30-day rule) + sendSlackDM
+  - auth.ts updated: activity check wired into events.signIn (first sign-in only)
+- Step 2.4: prisma/seed.ts — 14 demo products (community-driven, not endorsements)
+  - ts-node added to devDeps; prisma.seed config added to package.json
+  - Admin user: first sign-in Kellen → set role=ADMIN via prisma studio (no hardcoded user)
+- Step 2.5: (app)/layout.tsx — sticky top nav + UserMenu + BottomBar (mobile 4-tab)
+  - src/components/nav/UserMenu.tsx — avatar/initials dropdown, profile + sign out
+  - src/components/nav/BottomBar.tsx — neon active state, 4 tabs
+- Step 2.6: (admin)/layout.tsx — sidebar nav, ADMIN role gate (redirects MEMBER → /dashboard)
+
 IN PROGRESS:
 - None
 
 NEXT:
-- Step 2.1: Build /login page (dark alley landing, "Sign in with Slack" button)
-- Step 2.2: Build /pending page (awaiting review message)
-- Step 2.3: lib/slack.ts — Slack activity check (needs SLACK_BOT_TOKEN)
-- Step 2.4: prisma/seed.ts — admin user (Kellen) + 14 GTM Cafe partner products
-- Step 2.5: (app)/layout.tsx — nav bar, user menu, mobile bottom bar
-- Step 2.6: (admin)/layout.tsx — admin nav, role gate
+- Step 3.1: lib/links.ts — URL validation, redirect resolution, domain extraction, shortCode (nanoid)
+- Step 3.2: POST /api/links — full validation pipeline: Zod → fetch → dedupe → product match → store
+- Step 3.3: GET /api/links — user's links with aggregated stats
+- Step 3.4: PATCH /api/links/[id] — update status/note/revealed (owner-only)
+- Step 3.5: /submit page — URL input, product auto-detect, fallback selector, note, visibility toggle
+- Step 3.6: /my-links page — link cards with stats, status badges, action buttons
+- Rate limiting: 1 raffle per product per day per user (planned for Phase 8.1 but should note intent)
 
 KNOWN ISSUES:
 - Slack app not yet created (needed for OAuth + bot commands)
