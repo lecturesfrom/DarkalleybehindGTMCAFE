@@ -1,28 +1,39 @@
 # GTM Cafe_Raffle
 
-GTM Cafe_Raffle is a web-first, member-only referral-routing and community-connection app for GTM Cafe.
+Member-only referral link router for the GTM Cafe community. Members drop their referral links, and when someone needs a referral, the system randomly raffles one from the pool.
 
-Members can submit referral links, request referrals for products/tools, and optionally connect with the contributor behind a referral. The system uses tracked redirects to log serves and clicks and notify contributors when their referral helps someone.
+**Domain**: darkalleybehindgtmcafe.xyz
+**Community**: GTM Cafe (gtmcafe.com) — 1,800+ go-to-market professionals
 
-## MVP Priorities
+## How It Works
 
-- low-friction referral submission
-- member verification
-- link validation
-- random valid-link selection
-- tracked redirects
-- contributor notifications
-- optional requester/contributor connection
+1. **Drop** — A GTM Cafe member submits their referral link for a product (HeyReach, Smartlead, etc.)
+2. **Raffle** — When someone needs a referral, the system randomly picks a link from the pool
+3. **Reward** — The contributor benefits from the product's own referral program
+4. **Track** — Every raffle and click is logged so contributors can see their impact
 
-## Initial Tech Stack
+Two surfaces: **web app** at darkalleybehindgtmcafe.xyz + **Slack bot** with `/drop` and `/raffle` commands.
 
-- Next.js
-- Vercel
-- Neon Postgres
-- Prisma
-- Auth.js / NextAuth
-- Zod
+## Tech Stack
+
+Next.js 14 (App Router) · TypeScript · Tailwind CSS · Neon Postgres · Prisma · Auth.js (Slack OAuth) · Slack Bolt · Vercel
+
+## Documentation
+
+This project follows a documentation-first system. All specs live in the repo root:
+
+| File | Purpose |
+|------|---------|
+| [PRD.md](PRD.md) | Product requirements, features, non-goals, acceptance criteria |
+| [APP_FLOW.md](APP_FLOW.md) | Every page, every user path, error states, navigation |
+| [TECH_STACK.md](TECH_STACK.md) | Locked dependencies, versions, environment variables |
+| [FRONTEND_GUIDELINES.md](FRONTEND_GUIDELINES.md) | Design system — colors, typography, spacing, components |
+| [BACKEND_STRUCTURE.md](BACKEND_STRUCTURE.md) | Database schema, API contracts, auth logic, validation |
+| [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | Step-by-step build sequence (9 phases, ~35 steps) |
+| [CLAUDE.md](CLAUDE.md) | AI operating manual — rules, constraints, session protocol |
+| [progress.txt](progress.txt) | Current project state, what's done, what's next |
+| [lessons.md](lessons.md) | Self-improving rulebook, patterns, corrections |
 
 ## Status
 
-Planning / foundation setup
+Documentation phase complete. Ready for Phase 1: Project Foundation.

@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@layer base {
+  :root {
+    --bg-page: #0A0A0F;
+    --bg-surface: #141420;
+    --bg-elevated: #222238;
+    --text-primary: #F0F0F5;
+    --text-secondary: #9494A8;
+    --text-muted: #5C5C72;
+    --accent-green: #00FF88;
+    --accent-amber: #FFB800;
+    --accent-red: #FF4757;
+    --border: #2A2A3E;
+  }
+
+  html {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background-color: #0A0A0F;
+    color: #F0F0F5;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  ::selection {
+    background-color: rgba(0, 255, 136, 0.2);
+    color: #F0F0F5;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #141420;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #2A2A3E;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3A3A5A;
+  }
+}
+
+@layer utilities {
+  .neon-green {
+    color: #00FF88;
+  }
+
+  .neon-glow {
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5), 0 0 20px rgba(0, 255, 136, 0.3);
+  }
+
+  .surface-border {
+    border: 1px solid #2A2A3E;
+  }
+
+  .bg-surface {
+    background-color: #141420;
+  }
+
+  .bg-elevated {
+    background-color: #222238;
+  }
+}
