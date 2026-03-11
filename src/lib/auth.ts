@@ -2,6 +2,7 @@ import NextAuth from 'next-auth'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import { authConfig } from '@/lib/auth.config'
+import { checkSlackActivity } from '@/lib/slack'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -29,22 +30,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   events: {
     async signIn({ user, account, profile }) {
-      // Sync Slack-specific fields to User record after successful sign-in
       if (account?.provider === 'slack' && user.id) {
-        await prisma.user
-          .update({
-            where: { id: user.id },
-            data: {
-              // providerAccountId is always the Slack user ID (e.g. U1234567890)
-              slackUserId: account.providerAccountId ?? undefined,
-              // Slack normalized profile has `name` from identity.basic scope
-              slackUsername: (profile as { name?: string } | undefined)?.name ?? undefined,
-            },
-          })
-          .catch((err) => {
-            // Non-fatal: user record may not exist yet on first sign-in
-            console.warn('Failed to sync Slack fields:', err)
-          })
+        // Check if this is a first-time sign-in (slackUserId not yet set)
+        const existing = await prisma.user
+          .findUnique({ where: { id: user.id }, select: { slackUserId: true, status: true } })
+          .catch(() => null)
+
+        const slackUserId = account.providerAccountId ?? undefined
+        const slackUsername = (profile as { name?: string } | undefined)?.name ?? undefined
+
+        if (!existing?.slackUserId) {
+          // First sign-in — run activity check to auto-approve or set pending
+          const status = await checkSlackActivity(slackUserId ?? '')
+          await prisma.user
+            .update({ where: { id: user.id }, data: { slackUserId, slackUsername, status } })
+            .catch((err) => console.warn('Failed to set initial user status:', err))
+        } else {
+          // Returning user — sync profile fields only
+          await prisma.user
+            .update({ where: { id: user.id }, data: { slackUserId, slackUsername } })
+            .catch((err) => console.warn('Failed to sync Slack fields:', err))
+        }
       }
     },
   },
