@@ -1,9 +1,28 @@
-/README.md
-/docs/
-  00_project_brief.md
-  01_product_requirements.md
-  02_architecture_decisions.md
-  03_data_model.md
-  04_user_flows.md
-  05_build_plan.md
-  CURRENT_TASK.md
+# GTM Cafe_Raffle
+
+GTM Cafe_Raffle is a web-first, member-only referral-routing and community-connection app for GTM Cafe.
+
+Members can submit referral links, request referrals for products/tools, and optionally connect with the contributor behind a referral. The system uses tracked redirects to log serves and clicks and notify contributors when their referral helps someone.
+
+## MVP Priorities
+
+- low-friction referral submission
+- member verification
+- link validation
+- random valid-link selection
+- tracked redirects
+- contributor notifications
+- optional requester/contributor connection
+
+## Initial Tech Stack
+
+- Next.js
+- Vercel
+- Neon Postgres
+- Prisma
+- Auth.js / NextAuth
+- Zod
+
+## Status
+
+Planning / foundation setup
