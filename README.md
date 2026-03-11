@@ -1,2 +1,9 @@
-# DarkalleybehindGTMCAFE
-A community-driven space where users drop random product referral links into a shared bucket. When someone seeks recommendations or tests products, a link is randomly picked like a raffle, sparking connections while rewarding members with each referral.
+/README.md
+/docs/
+  00_project_brief.md
+  01_product_requirements.md
+  02_architecture_decisions.md
+  03_data_model.md
+  04_user_flows.md
+  05_build_plan.md
+  CURRENT_TASK.md
