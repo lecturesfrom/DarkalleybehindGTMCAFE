@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────
+
+enum UserRole {
+  MEMBER
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum LinkStatus {
+  ACTIVE
+  PAUSED
+  FLAGGED
+  EXPIRED
+}
+
+// ─── Auth (NextAuth / Auth.js) ──────────────────────
+
+model User {
+  id              String     @id @default(cuid())
+  email           String     @unique
+  name            String?
+  image           String?
+  slackUserId     String?    @unique
+  slackUsername   String?
+  role            UserRole   @default(MEMBER)
+  status          UserStatus @default(PENDING)
+  revealByDefault Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  referralLinks ReferralLink[]
+  linkServes    LinkServe[]      @relation("requester")
+  suggestedProducts Product[]    @relation("suggestor")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  access_token      String?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Domain Models ──────────────────────────────────
+
+model Product {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  domain        String?
+  domains       String[] @default([])
+  category      String?
+  description   String?
+  logoUrl       String?
+  website       String?
+  verified      Boolean  @default(false)
+  suggestedById String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  suggestedBy   User?          @relation("suggestor", fields: [suggestedById], references: [id])
+  referralLinks ReferralLink[]
+}
+
+model ReferralLink {
+  id          String     @id @default(cuid())
+  userId      String
+  productId   String
+  originalUrl String
+  finalUrl    String
+  shortCode   String     @unique
+  status      LinkStatus @default(ACTIVE)
+  note        String?
+  revealed    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user    User        @relation(fields: [userId], references: [id])
+  product Product     @relation(fields: [productId], references: [id])
+  serves  LinkServe[]
+
+  @@unique([userId, finalUrl])
+}
+
+model LinkServe {
+  id             String   @id @default(cuid())
+  referralLinkId String
+  requesterId    String
+  createdAt      DateTime @default(now())
+
+  referralLink ReferralLink @relation(fields: [referralLinkId], references: [id])
+  requester    User         @relation("requester", fields: [requesterId], references: [id])
+  click        LinkClick?
+}
+
+model LinkClick {
+  id          String   @id @default(cuid())
+  linkServeId String   @unique
+  userAgent   String?
+  ipHash      String?
+  referer     String?
+  createdAt   DateTime @default(now())
+
+  linkServe LinkServe @relation(fields: [linkServeId], references: [id])
+}
