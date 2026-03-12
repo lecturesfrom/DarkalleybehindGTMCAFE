@@ -84,7 +84,7 @@ lib/slack.ts — function to check user activity via Slack Web API on first sign
 (Reference: BACKEND_STRUCTURE.md — Activity Check)
 
 ### 2.4 Create seed script
-prisma/seed.ts — admin user (Kellen), 14 GTM Cafe partner products with domains.
+prisma/seed.ts — 14 demo products with domains and categories. These are example tools used in GTM communities — not endorsements or partnerships. No admin user is hardcoded; admin role is assigned manually after first Slack sign-in (see BACKEND_STRUCTURE.md — Admin Setup).
 (Reference: BACKEND_STRUCTURE.md — Seed Data)
 
 ### 2.5 Build app layout shell
@@ -201,8 +201,8 @@ When a link is raffled, send DM to contributor via Slack bot.
 ## Phase 7: Dashboard + Notifications
 
 ### 7.1 Build /dashboard page
-Greeting, quick actions, recent activity feed, personal stats, products needing referrals.
-(Reference: APP_FLOW.md — Flow 9, FRONTEND_GUIDELINES.md)
+Greeting, quick actions, recent activity feed, personal stats, products needing referrals. Includes first-login onboarding nudge banner (shown if user has zero links; dismissible via localStorage).
+(Reference: APP_FLOW.md — Flow 9, PRD.md — F11, FRONTEND_GUIDELINES.md)
 
 ### 7.2 Build in-app notification system
 Notification badge on nav, notification list/dropdown, mark as read.
@@ -213,7 +213,11 @@ Notification badge on nav, notification list/dropdown, mark as read.
 ## Phase 8: Polish + Rate Limiting
 
 ### 8.1 Add rate limiting
-lib/rate-limit.ts — DB-based rate limiter.
+lib/rate-limit.ts — DB-based rate limiter tied to user ID. Rules:
+- Link submission: 10/day (COUNT ReferralLink in last 24h for user)
+- Raffle request: 3/day flat cap (COUNT LinkServe in last 24h for user) — working default, revisit post-launch
+- Product suggestion: 5/day
+Return 429 with `{ error: 'Rate limited', resetsAt: <ISO timestamp> }` when exceeded.
 (Reference: BACKEND_STRUCTURE.md — Rate Limiting)
 
 ### 8.2 Error states and loading skeletons

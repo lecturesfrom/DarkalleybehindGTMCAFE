@@ -9,7 +9,7 @@ GTM Cafe_Raffle is a member-only referral link router for the GTM Cafe community
 
 ## Problem Statement
 
-GTM Cafe's partners page has ~14 GTM tools (HeyReach, Smartlead, OutboundSync, Ocean.io, etc.) with centralized affiliate/referral links routed through one person. When a member in Slack asks "anyone have a referral for [tool]?", there's no structured way to route that request or distribute the benefit across the community. Referral value is concentrated, not shared.
+GTM Cafe members frequently ask in Slack for referral links to tools they use — "Anyone have a referral for [tool]?" There's no structured way to route those requests or share referral value across the community. Referral benefit flows to one person or disappears into chat history. Members who have referral links for tools they use have no easy way to put those links to work for the community.
 
 ## Target Users
 
@@ -84,10 +84,18 @@ Both surfaces authenticate via Slack OAuth, proving GTM Cafe membership.
 - **Acceptance criteria**: Member types `/drop https://heyreach.io?ref=me` → bot confirms product detection → link stored. Member types `/raffle HeyReach` → bot responds with tracked URL.
 
 ### F8: Product Catalog
-- Admin-seeded with the 14 GTM Cafe partner tools: HeyReach, Smartlead, OutboundSync, The Deal Lab, Ocean.io, BetterContact, IcyPeas, Prospeo, Trigify, ScaledMail, RevyOps, SaaSyDB, TitanX, Mailpool
-- Members can suggest new products (submitted for admin review)
+- Fully community-driven. The catalog grows from what members actually submit links for.
+- Pre-seeded with 14 example products representing tools commonly used in GTM communities — these are **demo data only, not endorsements or partnerships**.
+- Members can suggest any new product (submitted for admin verification before it appears in the catalog)
 - Each product has: name, slug, domain(s), category, description, logo URL, verified status
-- **Acceptance criteria**: Product catalog page shows all products. Members can suggest additions. Admin can approve/edit/remove.
+- **Acceptance criteria**: Product catalog shows all verified products with active link counts. Members can suggest additions. Admin can approve/edit/remove.
+
+### F11: First-Login Onboarding Nudge
+- The raffle pool only works if members contribute links. New ACTIVE members see a one-time prompt on their first dashboard visit.
+- Banner: "The raffle only works if people drop links. Drop your first referral link now." → CTA to /submit
+- Dismissible (stored in localStorage — does not re-appear after dismiss)
+- Empty state on /request (no links for a product): "No referrals yet for [Product]. Be the first to drop one!" → CTA to /submit
+- **Acceptance criteria**: New member lands on /dashboard → sees onboarding banner. Dismisses → banner gone. Submits a link → banner gone. Empty product on /request → sees drop-link CTA.
 
 ### F9: Admin Panel (Web)
 - Manage users: view all, approve/suspend, change roles
@@ -123,6 +131,16 @@ Both surfaces authenticate via Slack OAuth, proving GTM Cafe membership.
 4. Contributors are notified when their link is raffled
 5. The system is live and usable within 7 build-days
 6. Zero referral links are served from suspended or flagged users
+
+## Open Design Questions
+
+> These require more thought before finalizing. Document decisions in BACKEND_STRUCTURE.md when resolved.
+
+- **Raffle mechanics**: Is the current on-demand raffle model (member requests → random link returned instantly) the right UX? Or should there be a queue/request flow ("I'm looking for a HeyReach referral") that gets matched asynchronously? Consider edge cases: what if no links exist? What if the only link belongs to the requester?
+- **Raffle rate limit**: Current working default is 3 raffles/day per member (flat cap). This may need adjustment based on real usage patterns. The goal is preventing gaming while allowing legitimate multi-product exploration.
+- **Link adoption flywheel**: How do we get the first 100 links into the system? Consider: admin outreach, Slack bot announcement, bulk-import from members who already have referral links.
+
+---
 
 ## Risks + Mitigations
 

@@ -255,7 +255,7 @@ Request:
 ### POST /api/request — Raffle a referral
 
 **Auth**: Required, ACTIVE status
-**Rate limit**: 20/day per user
+**Rate limit**: 3/day per user (flat cap across all products — working default, subject to change)
 
 Request:
 ```json
@@ -447,41 +447,54 @@ User pastes URL
 
 DB-based, tied to user ID (not IP).
 
-| Action | Limit | Window |
-|--------|-------|--------|
-| Link submission | 10 | per day |
-| Raffle request | 20 | per day |
-| Product suggestion | 5 | per day |
+| Action | Limit | Window | Notes |
+|--------|-------|--------|-------|
+| Link submission | 10 | per day | COUNT(ReferralLink WHERE userId = user AND createdAt > 24h) |
+| Raffle request | 3 | per day | Flat daily cap across all products. Working default — review after launch. |
+| Product suggestion | 5 | per day | COUNT(Product WHERE suggestedBy = user AND createdAt > 24h) |
 
 Implementation: Query count of actions in last 24h for user. If >= limit, return 429.
 
 ```sql
+-- Link submission rate check
 SELECT COUNT(*) FROM "ReferralLink"
 WHERE "userId" = $1
 AND "createdAt" > NOW() - INTERVAL '24 hours'
+
+-- Raffle rate check (flat daily cap)
+SELECT COUNT(*) FROM "LinkServe"
+WHERE "requesterId" = $1
+AND "createdAt" > NOW() - INTERVAL '24 hours'
 ```
+
+> **Design note**: The raffle rate limit (3/day) is a working default. The deeper raffle workflow — how requests are matched, what happens when no links exist, queue vs. instant model — is an open design question documented in PRD.md. Revisit this limit after observing real usage patterns.
 
 ---
 
 ## Seed Data
 
-### Admin User
-- Kellen Casebeer — role: ADMIN, status: ACTIVE
+### Admin Setup
+No admin user is hardcoded in seed data. Process:
+1. First admin signs in via Slack OAuth (creates a MEMBER account)
+2. Promote to ADMIN via Prisma Studio or direct SQL: `UPDATE "User" SET role = 'ADMIN' WHERE email = 'your@email.com'`
+3. Subsequent admins can be promoted via the Admin Panel → Users → Make Admin
 
-### Products (14 GTM Cafe Partners)
-| Name | Slug | Category |
-|------|------|----------|
-| HeyReach | heyreach | LinkedIn Automation |
-| Smartlead | smartlead | Cold Email |
-| OutboundSync | outboundsync | Sales Automation |
-| The Deal Lab | the-deal-lab | Deal Intelligence |
-| Ocean.io | ocean-io | Data Enrichment |
-| BetterContact | bettercontact | Data Enrichment |
-| IcyPeas | icypeas | Lead Generation |
-| Prospeo | prospeo | Email Finding |
-| Trigify | trigify | Signal-Based Selling |
-| ScaledMail | scaledmail | Email Infrastructure |
-| RevyOps | revyops | Revenue Operations |
-| SaaSyDB | saasydb | Database |
-| TitanX | titanx | Outbound Platform |
-| Mailpool | mailpool | Email Infrastructure |
+### Products (14 Demo Examples — NOT endorsements)
+These are example product entries pre-seeded to make the app testable from day one. The platform is **community-driven** — the real catalog grows from whatever tools members actually submit links for. These 14 represent tools commonly used in GTM communities; their presence is not an endorsement or partnership.
+
+| Name | Slug | Domain | Category |
+|------|------|--------|----------|
+| HeyReach | heyreach | heyreach.io | LinkedIn Automation |
+| Smartlead | smartlead | smartlead.ai | Cold Email |
+| OutboundSync | outboundsync | outboundsync.com | Sales Automation |
+| The Deal Lab | the-deal-lab | thedeallab.io | Deal Intelligence |
+| Ocean.io | ocean-io | ocean.io | Data Enrichment |
+| BetterContact | bettercontact | bettercontact.io | Data Enrichment |
+| IcyPeas | icypeas | icypeas.com | Lead Generation |
+| Prospeo | prospeo | prospeo.io | Email Finding |
+| Trigify | trigify | trigify.io | Signal-Based Selling |
+| ScaledMail | scaledmail | scaledmail.com | Email Infrastructure |
+| RevyOps | revyops | revyops.com | Revenue Operations |
+| SaaSyDB | saasydb | saasydb.com | Database |
+| TitanX | titanx | titanx.ai | Outbound Platform |
+| Mailpool | mailpool | mailpool.app | Email Infrastructure |

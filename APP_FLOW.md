@@ -42,6 +42,8 @@ User visits darkalleybehindgtmcafe.xyz
                     ├── Active member (meets threshold)
                     │   → Account created, status=ACTIVE
                     │   → Redirect to /dashboard
+                    │   → If no links dropped yet: first-login nudge banner shown
+                    │     "The raffle only works if people drop links. Drop your first."
                     │
                     └── Low activity / new account
                         → Account created, status=PENDING
@@ -174,7 +176,7 @@ Member navigates to /request (or clicks "Raffle" from dashboard)
            "Be the first to drop one!" → links to /submit
 
   ERROR STATES:
-    - Rate limited → "You've hit the daily limit. Come back tomorrow."
+    - Rate limited → "You've used your 3 raffles for today. Come back tomorrow."
     - Product has no active links → graceful empty state (above)
 ```
 
@@ -247,6 +249,10 @@ Member lands on dashboard after login or navigation
        │
        ▼
   Layout:
+    - First-login nudge (if user has zero links dropped — dismissible):
+        Banner: "The raffle only works if people drop links."
+        [Drop Your First Link] → /submit
+        [Dismiss] — stored in localStorage, never shown again
     - Greeting: "Back in the alley, [Name]"
     - Quick actions: [Drop a Link] [Raffle a Referral]
     - Recent activity:
@@ -256,7 +262,7 @@ Member lands on dashboard after login or navigation
       - Total links dropped
       - Total times your links were served
       - Total clicks on your links
-    - Products needing referrals (products with 0 links)
+    - Products needing referrals (products with 0 active links)
 ```
 
 ## Flow 10: Admin — Users ("/admin/users")

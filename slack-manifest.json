@@ -1,0 +1,93 @@
+{
+  "_metadata": {
+    "major_version": 1,
+    "minor_version": 1
+  },
+  "display_information": {
+    "name": "GTM Cafe Raffle",
+    "description": "Member-only referral link raffle for the GTM Cafe community. Submit links with /drop, run raffles with /raffle, and view your submissions with /mylinks.",
+    "background_color": "#0A0A0F",
+    "long_description": "GTM Cafe Raffle is a private tool for GTM Cafe community members (~1,800 members). It lets members submit referral links for GTM-related SaaS tools and randomly selects one to highlight each week. Members can interact entirely from Slack using slash commands, or use the web app at darkalleybehindgtmcafe.xyz. Only verified GTM Cafe workspace members can access the app."
+  },
+  "features": {
+    "app_home": {
+      "home_tab_enabled": false,
+      "messages_tab_enabled": true,
+      "messages_tab_read_only_enabled": false
+    },
+    "bot_user": {
+      "display_name": "rayray raffle",
+      "always_online": false
+    },
+    "slash_commands": [
+      {
+        "command": "/drop",
+        "url": "https://darkalleybehindgtmcafe.xyz/api/slack/commands",
+        "description": "Submit a referral link to the raffle pool",
+        "usage_hint": "<url> [--anon]",
+        "should_escape": false
+      },
+      {
+        "command": "/raffle",
+        "url": "https://darkalleybehindgtmcafe.xyz/api/slack/commands",
+        "description": "Run a raffle and pick a random referral link",
+        "usage_hint": "[product-name]",
+        "should_escape": false
+      },
+      {
+        "command": "/mylinks",
+        "url": "https://darkalleybehindgtmcafe.xyz/api/slack/commands",
+        "description": "View all your submitted referral links",
+        "usage_hint": "",
+        "should_escape": false
+      }
+    ]
+  },
+  "oauth_config": {
+    "redirect_urls": [
+      "https://darkalleybehindgtmcafe.xyz/api/auth/callback/slack",
+      "http://localhost:3000/api/auth/callback/slack"
+    ],
+    "scopes": {
+      "bot": [
+        "chat:write",
+        "commands",
+        "im:write",
+        "users:read",
+        "users:read.email"
+      ],
+      "user": [
+        "identity.avatar",
+        "identity.basic",
+        "identity.email",
+        "identity.team"
+      ]
+    }
+  },
+  "settings": {
+    "interactivity": {
+      "is_enabled": true,
+      "request_url": "https://darkalleybehindgtmcafe.xyz/api/slack/interactions",
+      "message_menu_options_url": "https://darkalleybehindgtmcafe.xyz/api/slack/interactions"
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false,
+    "token_rotation_enabled": false
+  },
+  "_scope_reasons": {
+    "_note": "These reasons must be entered manually in the Slack app console under OAuth & Permissions → Manage Reasons. Each must be ≥75 characters.",
+    "bot": {
+      "chat:write": "The bot sends direct messages to GTM Cafe members when their referral link is selected in a raffle, confirming the win with a personalized notification.",
+      "commands": "Enables the /raffle, /drop, and /mylinks slash commands so GTM Cafe members can submit referral links and run raffles directly from Slack without opening the web app.",
+      "im:write": "Required to open direct message channels with GTM Cafe members so the bot can deliver raffle win notifications and confirmations as private, ephemeral DMs.",
+      "users:read": "Used to look up GTM Cafe member profiles by Slack user ID during the sign-in activity check, verifying account age and workspace membership before granting access.",
+      "users:read.email": "Reads the email address associated with a member's Slack account to match it with their GTM Cafe_Raffle web account and ensure a single identity across both surfaces."
+    },
+    "user": {
+      "identity.avatar": "Retrieves the user's Slack profile picture during OAuth sign-in so their avatar can be displayed on their GTM Cafe_Raffle dashboard without requiring a separate upload.",
+      "identity.basic": "Reads the user's Slack display name and user ID during OAuth sign-in so their profile can be created or matched in the GTM Cafe_Raffle database automatically.",
+      "identity.email": "Retrieves the user's verified Slack email address during OAuth login to create or link their GTM Cafe_Raffle account and ensure uniqueness across the member directory.",
+      "identity.team": "Confirms which Slack workspace the user belongs to during sign-in, ensuring only verified GTM Cafe workspace members can access the referral raffle application."
+    }
+  }
+}
