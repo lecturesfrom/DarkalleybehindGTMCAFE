@@ -53,8 +53,16 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  // Admin-only routes
-  if (pathname.startsWith("/admin") && role !== "ADMIN") {
+  // Admin-only routes (pages: /admin/*, API: /api/admin/*)
+  const isAdminRoute =
+    pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
+  if (isAdminRoute && role !== "ADMIN") {
+    if (pathname.startsWith("/api/")) {
+      return new NextResponse(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
