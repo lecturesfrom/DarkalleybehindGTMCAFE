@@ -36,15 +36,12 @@ export const authConfig = {
   adapter: PrismaAdapter(prisma),
 
   providers: [
+    // Auth.js v5 Slack provider uses Slack's OIDC flow by default.
+    // Profile claims are namespaced: https://slack.com/user_id, https://slack.com/team_id
+    // Default scopes (openid email profile) include team_id claim — don't override.
     Slack({
       clientId: process.env.SLACK_CLIENT_ID!,
       clientSecret: process.env.SLACK_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          scope:
-            "identity.basic identity.email identity.avatar identity.team",
-        },
-      },
     }),
   ],
 
@@ -127,10 +124,14 @@ export const authConfig = {
     /**
      * Attach role, status, slackUserId to JWT token so middleware
      * can check permissions without a DB round-trip per request.
+     *
+     * Triggers:
+     *   "signIn" / "signUp" → full hydration from DB
+     *   undefined (token refresh) → re-read role/status so admin changes propagate
      */
     async jwt({ token, trigger }) {
-      // On sign-in, hydrate token from DB (user.id is available)
       if (trigger === "signIn" || trigger === "signUp") {
+        // Full hydration on first sign-in
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email! },
           select: { id: true, role: true, status: true, slackUserId: true },
@@ -141,6 +142,18 @@ export const authConfig = {
           token.role = dbUser.role;
           token.status = dbUser.status;
           token.slackUserId = dbUser.slackUserId;
+        }
+      } else if (token.id) {
+        // On subsequent refreshes, re-read role/status so admin changes take effect
+        // without requiring a full sign-out/sign-in cycle.
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true, status: true },
+        });
+
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.status = dbUser.status;
         }
       }
 
