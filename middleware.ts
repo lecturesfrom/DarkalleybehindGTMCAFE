@@ -29,11 +29,6 @@ export default auth((req) => {
 
   const { role, status } = session.user;
 
-  // Logged-in users visiting /login → send to dashboard
-  if (pathname === "/login") {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
-  }
-
   // Suspended users → back to login with error
   if (status === "SUSPENDED") {
     if (pathname === "/login") return NextResponse.next();
@@ -46,6 +41,11 @@ export default auth((req) => {
   if (status === "PENDING") {
     if (pathname === "/pending") return NextResponse.next();
     return NextResponse.redirect(new URL("/pending", req.url));
+  }
+
+  // Logged-in ACTIVE users visiting /login → send to dashboard
+  if (pathname === "/login") {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
   // ACTIVE users visiting /pending → send to dashboard

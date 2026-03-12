@@ -18,3 +18,4 @@ Updated after every correction or discovered pattern.
 - Update progress.txt after completing each step
 - Test on mobile after every UI change
 - When in doubt, check the canonical doc — don't guess
+- In middleware, evaluate status-based access rules before generic auth-route redirects to avoid redirect loops and dead branches

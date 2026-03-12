@@ -40,6 +40,7 @@ COMPLETED:
   - SUSPENDED → /login?error=suspended
   - /admin/* → ADMIN role required
   - Build confirmed: ✓ (next build passes, 20 routes, no TS/ESLint errors)
+  - Middleware redirect-order fix: status checks now run before generic "/login → /dashboard" redirect to prevent suspended-user redirect loops
 
 IN PROGRESS:
 - None
