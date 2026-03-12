@@ -68,5 +68,7 @@ See FRONTEND_GUIDELINES.md for full palette. Key values:
 6. After any correction or discovered pattern: update `lessons.md`
 7. When implementing a step: say "Building step X.Y from IMPLEMENTATION_PLAN.md"
 
-## GTM Cafe Partner Products (Seed Data)
+## Demo Products (Example Seed Data — Not Endorsements)
+The platform is community-driven. These 14 are pre-seeded as examples representing tools commonly used in GTM — not partnerships or endorsements. Members bring their own referral links for any tool they use.
+
 HeyReach, Smartlead, OutboundSync, The Deal Lab, Ocean.io, BetterContact, IcyPeas, Prospeo, Trigify, ScaledMail, RevyOps, SaaSyDB, TitanX, Mailpool
