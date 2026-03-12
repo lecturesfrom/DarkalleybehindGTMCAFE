@@ -35,6 +35,16 @@ With `adapter` set, Auth.js defaults to `database` sessions. You MUST explicitly
 - Raffle is simple random (ORDER BY random() LIMIT 1). No weighting, no round-robin in MVP.
 - Contributors choose visibility at link submission time, not at raffle time.
 
+## Git Workflow
+- `main` is the single source of truth. All work merges into `main`.
+- This laptop (local repo) is the canonical environment. Always reconcile here first, then push to GitHub.
+- Start new work by branching off an up-to-date `main`: `git checkout main && git pull && git checkout -b feature/...`
+- Keep feature branches short-lived. Merge back into `main` as soon as a chunk of work is complete and tested.
+- After merging, delete the feature branch locally (`git branch -d <branch>`) and remotely (`git push origin --delete <branch>`).
+- Periodically run `git branch --merged main` to find and prune stale branches.
+- Never force-push to `main` unless absolutely necessary and intentional.
+- One remote only: `origin` → `https://github.com/lecturesfrom/DarkalleybehindGTMCAFE.git`
+
 ## General Patterns
 - Always read CLAUDE.md and progress.txt at session start
 - Reference canonical docs before implementing any feature
