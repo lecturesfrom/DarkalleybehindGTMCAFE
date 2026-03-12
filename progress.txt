@@ -52,17 +52,24 @@ COMPLETED:
   - src/components/nav/BottomBar.tsx — neon active state, 4 tabs
 - Step 2.6: (admin)/layout.tsx — sidebar nav, ADMIN role gate (redirects MEMBER → /dashboard)
 
+- Step 3.1: lib/links.ts — resolveUrl, inferProduct, checkDuplicate, rate limit checks, generateShortCode
+- Step 3.2: POST /api/links — Zod → resolve → dedupe → infer product → short code → store (201)
+- Step 3.3: GET /api/links — user's links with serve + click counts aggregated
+- Step 3.4: PATCH /api/links/[id] — update status/note/revealed (owner-only, 403 if not owner)
+- Step 3.5: /submit + SubmitForm.tsx — URL input → detecting → confirm/select-product → done
+  - POST /api/links/detect — pre-confirm: resolve URL + infer product (used by SubmitForm)
+- Step 3.6: /my-links + LinkCard.tsx — stats bar, per-link card with copy/pause/visibility actions
+- Build confirmed: ✓
+
 IN PROGRESS:
 - None
 
 NEXT:
-- Step 3.1: lib/links.ts — URL validation, redirect resolution, domain extraction, shortCode (nanoid)
-- Step 3.2: POST /api/links — full validation pipeline: Zod → fetch → dedupe → product match → store
-- Step 3.3: GET /api/links — user's links with aggregated stats
-- Step 3.4: PATCH /api/links/[id] — update status/note/revealed (owner-only)
-- Step 3.5: /submit page — URL input, product auto-detect, fallback selector, note, visibility toggle
-- Step 3.6: /my-links page — link cards with stats, status badges, action buttons
-- Rate limiting: 1 raffle per product per day per user (planned for Phase 8.1 but should note intent)
+- Step 4.1: GET /api/products — list with active link counts, search param
+- Step 4.2: POST /api/products — member product suggestion (verified: false)
+- Step 4.3: POST /api/request — raffle: random select, self-exclude, LinkServe, notify contributor
+- Step 4.4: GET /r/[code] — click logging (user agent, hashed IP, referer) + 302 redirect
+- Step 4.5: /request page — product search/grid, raffle button, result card with tracked URL
 
 KNOWN ISSUES:
 - Slack app not yet created (needed for OAuth + bot commands)
