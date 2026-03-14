@@ -28,12 +28,24 @@ Empty `.ts` route files with only comments or `export {}` will fail `next build`
 ### JWT Strategy Required When Mixing Prisma Adapter + Middleware
 With `adapter` set, Auth.js defaults to `database` sessions. You MUST explicitly set `session: { strategy: 'jwt' }` in `auth.config.ts` to enable JWT-based sessions — required for edge middleware to decode sessions without DB access.
 
+### Notification System: Synchronous In-App + Best-Effort Slack DM
+**Problem**: PRD/BACKEND_STRUCTURE said "queue contributor notification" but TECH_STACK says "no background job system".
+**Resolution**: Notifications are synchronous:
+1. In-app notification: Create `Notification` record immediately (primary, never lost)
+2. Slack DM: Best-effort send after DB write — if it fails, catch + log, don't throw
+This avoids the need for a job queue while ensuring contributors always get notified (at least in-app).
+
+### Use Local Prisma Binary, Not npx
+**Problem**: Running `npx prisma format` may fetch latest Prisma (v7.x) which has breaking changes (datasource `url` no longer in schema).
+**Solution**: Use the local version: `./node_modules/.bin/prisma format` or run via npm scripts. The project pins Prisma 5.x.
+
 ## Architecture Decisions
 - Slack OAuth is the ONLY auth method. No Google OAuth, no magic links. Slack workspace ID = membership gate.
 - Activity check happens on first sign-in only, not on every login.
 - Web app and Slack bot share the same backend — don't duplicate business logic.
 - Raffle is simple random (ORDER BY random() LIMIT 1). No weighting, no round-robin in MVP.
 - Contributors choose visibility at link submission time, not at raffle time.
+- Notifications: in-app primary (DB), Slack DM secondary (best-effort, no queue needed for MVP).
 
 ## Git Workflow
 - `main` is the single source of truth. All work merges into `main`.

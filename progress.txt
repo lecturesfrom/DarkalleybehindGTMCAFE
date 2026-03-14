@@ -63,6 +63,25 @@ COMPLETED:
 - Step 3.6: /my-links + LinkCard.tsx — stats bar, per-link card with copy/pause/visibility actions
 - Build confirmed: ✓
 
+DOCUMENTATION GAP FIXES (Tier 1 Complete):
+- Action 1: Added Notification model to prisma/schema.prisma
+  - NotificationType enum (LINK_RAFFLED, ACCOUNT_APPROVED, ACCOUNT_SUSPENDED, LINK_FLAGGED, PRODUCT_APPROVED)
+  - Notification model with userId, type, title, message, linkId, read, createdAt
+  - Indexes on (userId, read) and (userId, createdAt)
+  - Relations: User.notifications[], ReferralLink.notifications[]
+- Action 2: Added Notification Delivery Mechanism section to BACKEND_STRUCTURE.md
+  - Resolved TECH_STACK vs queue contradiction: synchronous in-app + best-effort Slack DM
+  - Code examples for notifyContributor function
+  - Future enhancement path documented (Vercel Cron for retry)
+- Action 3: Added Dashboard/Notification API endpoints to BACKEND_STRUCTURE.md
+  - GET /api/dashboard/stats (linksDropped, timesServed, totalClicks, rafflesUsed, rafflesRemaining)
+  - GET /api/dashboard/activity (recent activity feed with union of raffled/requested events)
+  - GET /api/notifications (unread notifications list + unreadCount)
+  - PATCH /api/notifications/[id] (mark as read)
+  - POST /api/notifications/mark-all-read
+- Action 4: Added Table: Notification to BACKEND_STRUCTURE.md database schema section
+- Schema needs: `npx prisma db push` once network is available
+
 IN PROGRESS:
 - None
 
