@@ -124,6 +124,23 @@ Unique: (userId, finalUrl) — prevents duplicate submissions
 | referer | String? | | HTTP referer header |
 | createdAt | DateTime | DEFAULT now() | |
 
+### Table: Notification
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | String (cuid) | PK | |
+| userId | String | FK → User.id, CASCADE | Notification recipient |
+| type | Enum: LINK_RAFFLED, ACCOUNT_APPROVED, ACCOUNT_SUSPENDED, LINK_FLAGGED, PRODUCT_APPROVED | | |
+| title | String | NOT NULL | e.g. "Link Raffled!" |
+| message | String | NOT NULL | e.g. "Your HeyReach link was just raffled" |
+| linkId | String? | FK → ReferralLink.id, SET NULL | Related link if applicable |
+| read | Boolean | DEFAULT false | Has user seen this? |
+| createdAt | DateTime | DEFAULT now() | |
+
+Indexes:
+- `(userId, read)` — for fetching unread notifications
+- `(userId, createdAt)` — for activity feed ordering
+
 ---
 
 ## Authentication Logic
@@ -268,7 +285,8 @@ Processing:
 1. Query `ReferralLink WHERE productId = ? AND status = ACTIVE AND userId != currentUser`
 2. `ORDER BY random() LIMIT 1`
 3. Create LinkServe record
-4. Queue contributor notification (in-app + Slack DM)
+4. Create Notification record for contributor (in-app)
+5. Send Slack DM to contributor (best-effort, see Notification Delivery section)
 
 Response (200):
 ```json
@@ -351,6 +369,120 @@ Request:
 ```
 
 Creates product with `verified: false`, `suggestedBy: currentUser.id`
+
+### GET /api/dashboard/stats — User statistics
+
+**Auth**: Required, ACTIVE status
+
+Response (200):
+```json
+{
+  "stats": {
+    "linksDropped": 12,
+    "timesServed": 47,
+    "totalClicks": 38,
+    "rafflesUsed": 2,
+    "rafflesRemaining": 1
+  }
+}
+```
+
+**Implementation:** Aggregate counts from ReferralLink, LinkServe, LinkClick for current user.
+
+### GET /api/dashboard/activity — Recent activity feed
+
+**Auth**: Required, ACTIVE status
+
+Query params: `?limit=10`
+
+Response (200):
+```json
+{
+  "activities": [
+    {
+      "id": "cuid",
+      "type": "LINK_RAFFLED",
+      "message": "Your HeyReach link was raffled",
+      "timestamp": "2026-03-12T10:30:00Z",
+      "link": {
+        "id": "cuid",
+        "product": { "name": "HeyReach", "logoUrl": "..." }
+      }
+    },
+    {
+      "id": "cuid",
+      "type": "RAFFLE_REQUESTED",
+      "message": "You raffled a Smartlead link",
+      "timestamp": "2026-03-11T15:20:00Z",
+      "link": {
+        "id": "cuid",
+        "product": { "name": "Smartlead", "logoUrl": "..." }
+      }
+    }
+  ]
+}
+```
+
+**Data Source:**
+- Union of:
+  - LinkServe where `referralLinkId IN (user's links)` → "Your [product] link was raffled"
+  - LinkServe where `requesterId = currentUser` → "You raffled a [product] link"
+  - Notification where `userId = currentUser AND type = ACCOUNT_APPROVED` → "Your account was approved"
+
+### GET /api/notifications — Unread notifications
+
+**Auth**: Required, ACTIVE status
+
+Response (200):
+```json
+{
+  "notifications": [
+    {
+      "id": "cuid",
+      "type": "LINK_RAFFLED",
+      "title": "Link Raffled!",
+      "message": "Your HeyReach link was just raffled",
+      "read": false,
+      "createdAt": "2026-03-12T10:30:00Z",
+      "link": {
+        "id": "cuid",
+        "product": { "name": "HeyReach" }
+      }
+    }
+  ],
+  "unreadCount": 3
+}
+```
+
+### PATCH /api/notifications/[id] — Mark notification as read
+
+**Auth**: Required, owner only
+
+Request:
+```json
+{
+  "read": true
+}
+```
+
+Response (200):
+```json
+{
+  "id": "cuid",
+  "read": true
+}
+```
+
+### POST /api/notifications/mark-all-read — Mark all as read
+
+**Auth**: Required, ACTIVE status
+
+Response (200):
+```json
+{
+  "updatedCount": 3
+}
+```
 
 ### Admin Endpoints
 
@@ -440,6 +572,86 @@ User pastes URL
        ▼
   8. Insert ReferralLink
 ```
+
+---
+
+## Notification Delivery Mechanism
+
+**Design Decision:** Synchronous in-app + best-effort Slack DM (no background job system per TECH_STACK.md)
+
+Since TECH_STACK.md explicitly excludes background job systems for MVP, notifications are handled as follows:
+
+### In-App Notifications (Synchronous)
+
+When a raffle occurs (POST /api/request):
+1. Create `Notification` record in database immediately after LinkServe
+2. User sees notification on next page load (query unread notifications)
+3. No queue needed — database write is fast (<50ms)
+
+```typescript
+// In POST /api/request after LinkServe creation
+await prisma.notification.create({
+  data: {
+    userId: link.userId, // contributor
+    type: 'LINK_RAFFLED',
+    title: 'Link Raffled!',
+    message: `Your ${product.name} link was just raffled`,
+    linkId: link.id,
+  },
+})
+```
+
+### Slack DM Notifications (Best-Effort Asynchronous)
+
+After creating the Notification record, attempt to send a Slack DM:
+- If Slack DM succeeds → great, user gets instant notification
+- If Slack DM fails (rate limit, network error, token expired) → catch error, log it, continue
+- User still gets in-app notification, so no data loss
+- Trade-off: Some Slack DMs may be lost, but this is acceptable for MVP
+
+```typescript
+// lib/notifications.ts
+import { sendSlackDM } from '@/lib/slack'
+import { prisma } from '@/lib/prisma'
+
+export async function notifyContributor(
+  contributorId: string,
+  contributorSlackId: string | null,
+  productName: string,
+  linkId: string
+) {
+  // 1. Always create in-app notification (primary)
+  await prisma.notification.create({
+    data: {
+      userId: contributorId,
+      type: 'LINK_RAFFLED',
+      title: 'Link Raffled!',
+      message: `Your ${productName} link was just raffled`,
+      linkId,
+    },
+  })
+
+  // 2. Best-effort Slack DM (bonus)
+  if (contributorSlackId) {
+    try {
+      await sendSlackDM(
+        contributorSlackId,
+        `🎉 Your ${productName} referral link was just raffled! Check your dashboard for details.`
+      )
+    } catch (error) {
+      console.error('Failed to send Slack DM notification:', error)
+      // Don't throw — in-app notification is primary, Slack DM is bonus
+    }
+  }
+}
+```
+
+### Future Enhancement (Post-MVP)
+
+If Slack DM reliability becomes important:
+1. Add `slackDmSent: Boolean @default(false)` to Notification model
+2. Create Vercel Cron Job that queries `Notification WHERE slackDmSent = false AND createdAt > 1h ago`
+3. Retry failed DMs in batch (respecting Slack rate limits)
 
 ---
 

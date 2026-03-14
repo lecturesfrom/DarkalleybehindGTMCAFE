@@ -27,6 +27,14 @@ enum LinkStatus {
   EXPIRED
 }
 
+enum NotificationType {
+  LINK_RAFFLED        // Your link was selected in a raffle
+  ACCOUNT_APPROVED    // Admin approved your account
+  ACCOUNT_SUSPENDED   // Your account was suspended
+  LINK_FLAGGED        // Admin flagged one of your links
+  PRODUCT_APPROVED    // Your suggested product was approved
+}
+
 // ─── Auth (NextAuth / Auth.js) ──────────────────────
 
 model User {
@@ -43,11 +51,12 @@ model User {
   updatedAt       DateTime   @updatedAt
 
   // Relations
-  accounts      Account[]
-  sessions      Session[]
-  referralLinks ReferralLink[]
-  linkServes    LinkServe[]      @relation("requester")
-  suggestedProducts Product[]    @relation("suggestor")
+  accounts          Account[]
+  sessions          Session[]
+  referralLinks     ReferralLink[]
+  linkServes        LinkServe[]      @relation("requester")
+  suggestedProducts Product[]        @relation("suggestor")
+  notifications     Notification[]
 }
 
 model Account {
@@ -120,7 +129,8 @@ model ReferralLink {
 
   user    User        @relation(fields: [userId], references: [id])
   product Product     @relation(fields: [productId], references: [id])
-  serves  LinkServe[]
+  serves        LinkServe[]
+  notifications Notification[]
 
   @@unique([userId, finalUrl])
 }
@@ -134,6 +144,25 @@ model LinkServe {
   referralLink ReferralLink @relation(fields: [referralLinkId], references: [id])
   requester    User         @relation("requester", fields: [requesterId], references: [id])
   click        LinkClick?
+}
+
+// ─── Notifications ──────────────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  linkId    String?          // Related link ID if applicable
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  link ReferralLink? @relation(fields: [linkId], references: [id], onDelete: SetNull)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
 }
 
 model LinkClick {
